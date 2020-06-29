@@ -1,0 +1,128 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using DevExpress.XtraEditors;
+using System.Data.Sql;
+using System.Data.SqlClient;
+using DevExpress.LookAndFeel;
+
+namespace OmerBayat.Rehber.Views
+{
+    public partial class Login : XtraForm
+    {
+        public Login()
+        {
+            InitializeComponent();
+        }
+
+        public string yetki;
+        public int intyetki;
+        public string adisoyadi;
+        public string yetkiadi;
+
+        private void simpleButton1_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+            this.Close();
+        }
+
+        private void veritabanıAyarlarıToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmDBAyarlari dbayar = new frmDBAyarlari();
+            dbayar.ShowDialog();
+        }
+
+        private void yardımToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            BIRLIK.loginyardim yardim = new BIRLIK.loginyardim();
+            yardim.ShowDialog();
+        }
+
+        private void çıkışToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+            this.Close();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            progressBarControl1.EditValue = Convert.ToInt32(progressBarControl1.EditValue) + 10;
+
+            if(Convert.ToInt32(progressBarControl1.EditValue) > 90 )
+            {
+                timer1.Stop();
+                intyetki = Int32.Parse(yetki);
+                IndexForm anaf = new IndexForm();
+                anaf.Show();
+                this.Hide();
+            }
+        }
+
+        private void Login_Load(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                SqlConnection baglanti = new SqlConnection();
+                baglanti.ConnectionString = "Data Source =" + Properties.Settings.Default.cs_Sunucu + "; Initial Catalog =" + Properties.Settings.Default.cs_Database + "; User ID =" + Properties.Settings.Default.cs_UserID + "; Password =" + Properties.Settings.Default.cs_Password + ";connection timeout=" + Properties.Settings.Default.cs_BaglantiSure + "; ";
+                baglanti.Open();
+                SqlParameter prm1 = new SqlParameter("@kadi", txtKullaniciAdi.Text);
+                SqlParameter prm2 = new SqlParameter("@ksifre", txtSifre.Text);
+                string sql = "";
+
+                sql = "SELECT * FROM BILGILER WHERE k_adi= @kadi AND k_sifre = @ksifre";
+                SqlCommand cmd = new SqlCommand(sql, baglanti);
+                cmd.Parameters.Add(prm1);
+                cmd.Parameters.Add(prm2);
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                SqlDataReader dr;
+                dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    yetki = (dr["k_yetki"].ToString());
+                    adisoyadi = (dr["k_adisoyadi"].ToString());
+                    yetkiadi = (dr["k_yetkiadi"].ToString());
+                }
+
+
+                if (dt.Rows.Count > 0)
+                {
+                    progressBarControl1.Visible = true;
+                    timer1.Start();
+                }
+                else
+                {
+                    Dialog.Mesajlar.HataVer("Bilgiler hatalı kontrol ediniz!");
+                }
+            }
+            catch (SqlException)
+            {
+                Dialog.Mesajlar.HataVer("Veritabanı hatası!" + Environment.NewLine + "Bilgileri kontrol ediniz");
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+            this.Close();
+        }
+
+        private void progressBarControl1_EditValueChanged(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
